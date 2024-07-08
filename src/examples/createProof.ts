@@ -22,7 +22,7 @@ async function example() {
 
   const proof = await KeylessService.getProof({
     jwt: EXAMPLE_JWT,
-    ephemeralKeyPair: ephemeralKeyPairBase64,
+    ephemeralKeyPairBase64,
     network: Network.LOCAL,
   });
 

@@ -15,11 +15,11 @@ class KeylessController {
       throw new AuthorizationErrorResponse("JWT is required");
     }
 
-    const { ephemeralKeyPair, network } = req.body;
+    const { ephemeralKeyPairBase64, network } = req.body;
 
     let result = await KeylessService.getProof({
       jwt,
-      ephemeralKeyPair,
+      ephemeralKeyPairBase64,
       network,
     });
 

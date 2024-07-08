@@ -9,7 +9,7 @@ class SponsoredTransactionController {
     _next: NextFunction
   ) => {
     const {
-      transactionBytes,
+      transactionBytesBase64,
       sender,
       allowedAddresses,
       allowedMoveCallTargets,
@@ -17,7 +17,7 @@ class SponsoredTransactionController {
     } = req.body;
 
     let result = await SponsoredTransactionService.createSponsorTransaction({
-      transactionBytes,
+      transactionBytesBase64,
       sender,
       allowedAddresses,
       allowedMoveCallTargets,
