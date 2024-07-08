@@ -10,6 +10,7 @@ import {
 } from "@aptos-labs/ts-sdk";
 
 import SponsoredTransactionService from "../services/sponsoredTransaction.service";
+import { fromB64, toB64 } from "../utils";
 
 const EXAMPLE_JWT =
   "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3QtcnNhIn0.eyJpc3MiOiJ0ZXN0Lm9pZGMucHJvdmlkZXIiLCJhdWQiOiJ0ZXN0LWtleWxlc3Mtc2RrIiwic3ViIjoidGVzdC11c2VyLTAiLCJlbWFpbCI6InRlc3QwQGFwdG9zbGFicy5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiaWF0IjoxNzE3MDM5NDg0LCJleHAiOjI3MDAwMDAwMDAsIm5vbmNlIjoiOTM2MTU0NTUyNDkyMDA0ODgwNjUzNDY0MDQ5ODUwMzg4NDk1NDg2NTU2NzM2MjEwNzM0OTIyMTMwMDI4NDIwOTg3NTA5MTM2MjIyOSJ9.ZLZRVJpYfxjNBIdQjeLEniuUsMuBQ7zYm0R0bzKdoIFO4uDTcGrg50-ao_2t89A6EYO0p1uvOC_zCtYsAE57i36kvnX5zCCJwpu7-tMLGsOWCR56H22PgSD7GUcmOp4uePbMPPXp753YrNnlbArEQztfQssI6ScyMVQzNDYW7z2V6esB_GtkEaQzsKDEExDPKC_JBBI__Mek7SQLjFDjbBnWJsGuL4fp2Ux0GVJTaTFvFZMNfNzSQX3Mi93dJFu67xt4UwMUoOxPF1C63SPM53DPBPBPK71dEHug3Z4afgswyEZfNHSotMfhT7D1IEaOzKJnoCSwML5eP0VA0bmGRQ";
@@ -47,7 +48,6 @@ async function example() {
   // Generate Bob's account
   const bob = Account.generate();
 
-  // FE will create this transaction and call to endpoint /v1/transaction-blocks/sponsor
   const transaction = await aptos.transaction.build.simple({
     sender: keylessAccount.accountAddress,
     withFeePayer: true,
@@ -58,13 +58,13 @@ async function example() {
   });
   console.log("Before sponsor transaction: ", transaction);
 
-  // After calling /v1/transaction-blocks/sponsor, FE will get this signed transaction
-  const transactionBytesBase64 = Buffer.from(transaction.bcsToBytes()).toString(
-    "base64"
-  );
-  const { signedTransactionBase64 } =
+  // FE will convert this transaction to base64 string and call to endpoint /v1/transaction-blocks/sponsor
+  const transactionBytesBase64 = toB64(transaction.bcsToBytes());
+
+  // After calling /v1/transaction-blocks/sponsor, FE will get this signed transaction as base64 string
+  const { sponsorSignedTransactionBytesBase64 } =
     await SponsoredTransactionService.createSponsorTransaction({
-      transactionBytes: transactionBytesBase64,
+      transactionBytesBase64,
       sender: "", // service handle later
       allowedAddresses: [], // service handle later
       allowedMoveCallTargets: [], // service handle later
@@ -72,10 +72,7 @@ async function example() {
     });
 
   // deserialize raw transaction
-  const uint8Array = new Uint8Array(
-    Buffer.from(signedTransactionBase64, "base64")
-  );
-  const deserializerTransaction = new Deserializer(uint8Array);
+  const deserializerTransaction = new Deserializer(fromB64(sponsorSignedTransactionBytesBase64));
   const signedTransaction = SimpleTransaction.deserialize(
     deserializerTransaction
   );

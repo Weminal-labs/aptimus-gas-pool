@@ -11,6 +11,7 @@ import {
 } from "@aptos-labs/ts-sdk";
 
 import SponsoredTransactionService from "../services/sponsoredTransaction.service";
+import { fromB64, toB64 } from "../utils";
 
 const INITIAL_BALANCE = 100000000;
 
@@ -57,13 +58,11 @@ async function example() {
     },
   });
 
-  const transactionBytesBase64 = Buffer.from(transaction.bcsToBytes()).toString(
-    "base64"
-  );
+  const transactionBytesBase64 = toB64(transaction.bcsToBytes());
 
-  const { sponsorAuthBytesBase64, signedTransactionBase64 } =
+  const { sponsorAuthBytesBase64, sponsorSignedTransactionBytesBase64 } =
     await SponsoredTransactionService.createSponsorTransaction({
-      transactionBytes: transactionBytesBase64,
+      transactionBytesBase64,
       sender: "", // service handle later
       allowedAddresses: [], // service handle later
       allowedMoveCallTargets: [], // service handle later
@@ -78,25 +77,20 @@ async function example() {
     transaction,
   });
 
-  // Convert the base64 string back to Uint8Array
-  const sponsorAuthBytes = new Uint8Array(
-    Buffer.from(sponsorAuthBytesBase64, "base64")
-  );
-
-  const deserializer = new Deserializer(sponsorAuthBytes);
+  // deserialize fee payer authenticator
+  const deserializer = new Deserializer(fromB64(sponsorAuthBytesBase64));
   const feePayerAuthenticator = AccountAuthenticator.deserialize(deserializer);
 
   // deserialize raw transaction
-  const uint8Array = new Uint8Array(
-    Buffer.from(signedTransactionBase64, "base64")
+  const deserializerTransaction = new Deserializer(
+    fromB64(sponsorSignedTransactionBytesBase64)
   );
-  const deserializerTransaction = new Deserializer(uint8Array);
-  const signedTransaction = SimpleTransaction.deserialize(
+  const sponsorSignedTransaction = SimpleTransaction.deserialize(
     deserializerTransaction
   );
 
   const response = await aptos.transaction.submit.simple({
-    transaction: signedTransaction,
+    transaction: sponsorSignedTransaction,
     senderAuthenticator: senderAuth,
     feePayerAuthenticator,
   });

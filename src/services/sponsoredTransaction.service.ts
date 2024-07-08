@@ -6,17 +6,21 @@ import {
   Network,
   SimpleTransaction,
 } from "@aptos-labs/ts-sdk";
-import { CreateSponsoredTransactionRequest } from "../types";
+import {
+  CreateSponsoredTransactionRequest,
+  CreateSponsoredTransactionResponse,
+} from "../types";
+import { fromB64, toB64 } from "../utils";
 
 class SponsoredTransactionService {
   // The sponsor server gets the serialized transaction to sign as the fee payer
   static createSponsorTransaction = async ({
-    transactionBytes: transactionBytesBase64,
+    transactionBytesBase64,
     // sender,
     // allowedAddresses,
     // allowedMoveCallTargets,
     network = Network.TESTNET,
-  }: CreateSponsoredTransactionRequest) => {
+  }: CreateSponsoredTransactionRequest): Promise<CreateSponsoredTransactionResponse> => {
     const aptosConfig = new AptosConfig({ network });
     const aptos = new Aptos(aptosConfig);
 
@@ -29,13 +33,8 @@ class SponsoredTransactionService {
       amount: 100000000,
     });
 
-    // Convert the base64 string back to Uint8Array
-    const uint8Array = new Uint8Array(
-      Buffer.from(transactionBytesBase64, "base64")
-    );
-
     // deserialize raw transaction
-    const deserializer = new Deserializer(uint8Array);
+    const deserializer = new Deserializer(fromB64(transactionBytesBase64));
     const transaction = SimpleTransaction.deserialize(deserializer);
 
     // Sponsor signs
@@ -45,16 +44,13 @@ class SponsoredTransactionService {
     });
 
     const sponsorAuthBytes = sponsorAuth.bcsToBytes();
-    const sponsorAuthBytesBase64 =
-      Buffer.from(sponsorAuthBytes).toString("base64");
+    const sponsorAuthBytesBase64 = toB64(sponsorAuthBytes);
 
-    const signedTransactionBase64 = Buffer.from(transaction.bcsToBytes()).toString(
-      "base64"
-    );
+    const sponsorSignedTransactionBytesBase64 = toB64(transaction.bcsToBytes());
 
     return {
       sponsorAuthBytesBase64,
-      signedTransactionBase64,
+      sponsorSignedTransactionBytesBase64,
     };
   };
 }
