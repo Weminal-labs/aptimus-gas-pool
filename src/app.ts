@@ -2,6 +2,7 @@ import compression from "compression";
 import express, { Express, Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import cors from "cors";
 
 import { ErrorResponse, NotFoundErrorResponse } from "./core/error.response";
 import router from "./routes";
@@ -9,6 +10,7 @@ import router from "./routes";
 const app: Express = express();
 
 // init middlewares
+app.use(cors());
 app.use(morgan("dev"));
 app.use(helmet());
 app.use(compression());
