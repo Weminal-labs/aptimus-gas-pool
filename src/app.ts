@@ -34,8 +34,8 @@ app.use(
   (error: ErrorResponse, _req: Request, res: Response, _next: NextFunction) => {
     return res.status(error.statusCode).json({
       status: "error",
-      statusCode: error.statusCode,
-      message: error.message,
+      statusCode: error.statusCode || 500,
+      message: error.message || "Internal Server Error",
     });
   }
 );
