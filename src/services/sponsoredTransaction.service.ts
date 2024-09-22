@@ -36,11 +36,6 @@ class SponsoredTransactionService {
       });
       console.log(`Sponsor's address is: ${sponsor.accountAddress}`);
 
-      await aptos.fundAccount({
-        accountAddress: sponsor.accountAddress,
-        amount: 100000000,
-      });
-
       // deserialize raw transaction
       const deserializer = new Deserializer(fromB64(transactionBytesBase64));
       const transaction = SimpleTransaction.deserialize(deserializer);

@@ -32,9 +32,10 @@ app.use((_req, _res, next) => {
 
 app.use(
   (error: ErrorResponse, _req: Request, res: Response, _next: NextFunction) => {
-    return res.status(error.statusCode).json({
+    const statusCode = error.statusCode || 500;
+    return res.status(statusCode).json({
       status: "error",
-      statusCode: error.statusCode || 500,
+      statusCode: statusCode || 500,
       message: error.message || "Internal Server Error",
     });
   }
