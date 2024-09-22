@@ -3,6 +3,7 @@ import {
   Aptos,
   AptosConfig,
   Deserializer,
+  Ed25519PrivateKey,
   Network,
   SimpleTransaction,
 } from "@aptos-labs/ts-sdk";
@@ -21,37 +22,47 @@ class SponsoredTransactionService {
     // allowedMoveCallTargets,
     network = Network.TESTNET,
   }: CreateSponsoredTransactionRequest): Promise<CreateSponsoredTransactionResponse> => {
-    const aptosConfig = new AptosConfig({ network });
-    const aptos = new Aptos(aptosConfig);
+    try {
+      const aptosConfig = new AptosConfig({ network });
+      const aptos = new Aptos(aptosConfig);
 
-    // TODO: Aptimus sponsor account
-    const sponsor = Account.generate();
-    console.log(`Sponsor's address is: ${sponsor.accountAddress}`);
+      const privateKeyString = process.env.SPONSOR_ACCOUNT_PRIVATE_KEY;
+      if (!privateKeyString) {
+        throw new Error('SPONSOR_ACCOUNT_PRIVATE_KEY environment variable is not set');
+      }
+      const privateKey = new Ed25519PrivateKey(privateKeyString);
+      const sponsor = Account.fromPrivateKey({
+        privateKey
+      });
+      console.log(`Sponsor's address is: ${sponsor.accountAddress}`);
 
-    await aptos.fundAccount({
-      accountAddress: sponsor.accountAddress,
-      amount: 100000000,
-    });
+      await aptos.fundAccount({
+        accountAddress: sponsor.accountAddress,
+        amount: 100000000,
+      });
 
-    // deserialize raw transaction
-    const deserializer = new Deserializer(fromB64(transactionBytesBase64));
-    const transaction = SimpleTransaction.deserialize(deserializer);
+      // deserialize raw transaction
+      const deserializer = new Deserializer(fromB64(transactionBytesBase64));
+      const transaction = SimpleTransaction.deserialize(deserializer);
 
-    // Sponsor signs
-    const sponsorAuth = aptos.transaction.signAsFeePayer({
-      signer: sponsor,
-      transaction,
-    });
+      // Sponsor signs
+      const sponsorAuth = aptos.transaction.signAsFeePayer({
+        signer: sponsor,
+        transaction,
+      });
 
-    const sponsorAuthBytes = sponsorAuth.bcsToBytes();
-    const sponsorAuthBytesBase64 = toB64(sponsorAuthBytes);
+      const sponsorAuthBytes = sponsorAuth.bcsToBytes();
+      const sponsorAuthBytesBase64 = toB64(sponsorAuthBytes);
 
-    const sponsorSignedTransactionBytesBase64 = toB64(transaction.bcsToBytes());
+      const sponsorSignedTransactionBytesBase64 = toB64(transaction.bcsToBytes());
 
-    return {
-      sponsorAuthBytesBase64,
-      sponsorSignedTransactionBytesBase64,
-    };
+      return {
+        sponsorAuthBytesBase64,
+        sponsorSignedTransactionBytesBase64,
+      };
+    } catch (error) {
+      throw error;
+    }
   };
 }
 

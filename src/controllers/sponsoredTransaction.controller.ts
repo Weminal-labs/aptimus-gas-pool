@@ -6,27 +6,32 @@ class SponsoredTransactionController {
   static createSponsoredTransaction = async (
     req: Request,
     res: Response,
-    _next: NextFunction
+    next: NextFunction
   ) => {
-    const {
-      transactionBytesBase64,
-      sender,
-      allowedAddresses,
-      allowedMoveCallTargets,
-      network,
-    } = req.body;
+    try {
+      const {
+        transactionBytesBase64,
+        sender,
+        allowedAddresses,
+        allowedMoveCallTargets,
+        network,
+      } = req.body;
 
-    let result = await SponsoredTransactionService.createSponsorTransaction({
-      transactionBytesBase64,
-      sender,
-      allowedAddresses,
-      allowedMoveCallTargets,
-      network,
-    });
+      let result = await SponsoredTransactionService.createSponsorTransaction({
+        transactionBytesBase64,
+        sender,
+        allowedAddresses,
+        allowedMoveCallTargets,
+        network,
+      });
 
-    return new SuccessResponse({
-      data: result,
-    }).send(res);
+      return new SuccessResponse({
+        data: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+      return;
+    }
   };
 }
 

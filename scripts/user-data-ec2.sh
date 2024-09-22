@@ -38,4 +38,5 @@ sudo docker run -it -d \
   -e VIRTUAL_PORT=3000 \
   -e LETSENCRYPT_HOST="aptimus-gas-pool.weminal.com" \
   -e LETSENCRYPT_EMAIL="weminal@gmail.com" \
+  -e SPONSOR_ACCOUNT_PRIVATE_KEY="ENTER_PRIVATE_KEY" \
   lekhacthanhtung/aptimus-gas-pool

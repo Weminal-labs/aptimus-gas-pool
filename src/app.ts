@@ -6,6 +6,9 @@ import cors from "cors";
 
 import { ErrorResponse, NotFoundErrorResponse } from "./core/error.response";
 import router from "./routes";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app: Express = express();
 
